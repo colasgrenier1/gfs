@@ -34,7 +34,11 @@ DList!Token parse(File f) {
 	string c;
 	char[1] ca;
 	while (!f.eof()) {
-		c = to!string(f.rawRead(ca)[0]);
+		if ((f.rawRead(ca)).length==0) {
+			return tokens;
+		}
+		c = to!string(ca[0]);
+		writeln("PARSING CHARACTER '" ~ c ~ "'.");
 		if (c=="\n") {
 			if (!tokens.empty() && tokens.back().type==TokenType.NEWLINE && tokens.back().content=="\r") {
 				tokens.back().content ~= c;
@@ -94,7 +98,7 @@ DList!Token parse(File f) {
 				}
 			}
 		} else {
-			if (!tokens.empty() && tokens.back().type==TokenType.WORD) {
+			if (!tokens.empty() && (tokens.back().type==TokenType.WORD || tokens.back().type==TokenType.COMMAND)) {
 				tokens.back().content ~= c;
 			} else {
 				tokens.insert(new Token(TokenType.WORD, c));
