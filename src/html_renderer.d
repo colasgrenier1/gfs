@@ -15,5 +15,5 @@ void renderItalic(Italic obj, File f) {
 }
 
 void RenderParagraph(Paragraph p, File f) {
-	
+
 }

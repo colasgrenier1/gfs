@@ -68,6 +68,13 @@ class Context {
 	}
 
 	/**
+	 * Remove the current frame
+	 */
+	void pop() {
+
+	}
+
+	/**
 	 * Returns the command.
 	 */
 	Command resolve(string name) {
@@ -114,8 +121,8 @@ void newParagraph(Document document, Context context) {
 void seekTextContainer(Document document, Context context) {
 	//Go to the nearest text or paragraph container
 	while (!(context.current().textContainer || context.current().paragraphContainer)) {
-		if !(context.current().canPop) {
-			throw new Exception("Encountered non-poppable element in quest of")
+		if (!context.current().canPop) {
+			throw new Exception("Encountered non-poppable element in quest of");
 		}
 		context.pop();
 	}
@@ -123,7 +130,7 @@ void seekTextContainer(Document document, Context context) {
 	//if not t container we know this is a pcontainer
 	//and that thus we need to append a paragraph
 	if (!context.current().textContainer) {
-		document.push(new Paragraph())
+		document.push(new Paragraph());
 	}
 }
 
@@ -140,7 +147,8 @@ void execute(Document document, Context context, DList!Token tokens) {
 		if (tok.type == TokenType.EMPTY) {
 			//We pass
 		} else if (tok.type == TokenType.NEWLINE) {
-			//We either add a space or we put paragraph needed
+			//We either will add a space or we put paragraph needed
+			//The space will be added later?
 			if (context.current().newParagraphMayBeRequired) {
 				context.current().newParagraphMayBeRequired = false;
 				context.current().newParagraphRequired = true;

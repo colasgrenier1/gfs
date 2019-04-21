@@ -1,0 +1,15 @@
+<BOOK NUMBER="1" TITLE="Clio">
+	<PARAGRAPH>
+		<PREFACE>
+		This is the preface to Herodotus's first book.
+		<SECTION NUMBER="1"/>
+		This is the first section.
+		<SECTION NUMBER="2"/>
+		This is the second section, inside
+		the first paragraph.
+	</PARAGRAPH>
+	<PARAGRAPH>
+		This is still the second section, but
+		continued withing the next paragraph.
+	</PARAGRAPH>
+</BOOK>

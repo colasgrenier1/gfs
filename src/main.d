@@ -17,6 +17,8 @@ void main() {
 	//We get the tokens
 	auto t = parse(File("test.gfs"));
 
+	dump_tokens(t);
+
 
 	//We instantiate a context
 	auto c = new Context();

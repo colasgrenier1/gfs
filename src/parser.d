@@ -21,10 +21,12 @@ class Token {
 
 	this(TokenType type, string content) {
 		this.type = type;
+		this.content = content;
 	}
 
 	this(TokenType type, DList!Token contents) {
-
+		this.type = type;
+		this.contents = contents;
 	}
 
 }
@@ -106,4 +108,42 @@ DList!Token parse(File f) {
 		}
 	}
 	return tokens;
+}
+
+/*
+ * Dump tokens to stdout.
+ */
+void dump_tokens(DList!Token tokens) {
+	_dump_tokens(tokens, 2);
+}
+
+private void _dump_tokens(DList!Token tokens, int level) {
+	foreach (Token tok; tokens) {
+		for (int i=0; i<level; i++) {
+			write(" ");
+		}
+		switch (tok.type) {
+			case TokenType.EMPTY:
+				writeln("EMPTY");
+				break;
+			case TokenType.NEWLINE:
+				writeln("NEWLINE");
+				break;
+			case TokenType.SPACE:
+				writefln("%-10s '%s'", "SPACE", tok.content);
+				break;
+			case TokenType.WORD:
+				writefln("%-10s %s", "WORD", tok.content);
+				break;
+			case TokenType.COMMAND:
+				writefln("%-10s %s", "COMMAND", tok.content);
+				break;
+			case TokenType.BLOCK:
+				writefln("%-10s", "BLOCK");
+				_dump_tokens(tok.contents, level+2);
+				break;
+			default:
+				writeln("OTHER!!!!");
+		}
+	}
 }
