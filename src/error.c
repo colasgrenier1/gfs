@@ -2,7 +2,7 @@
 
 #include "error.h"
 
-error * error_new(int number, const char fmt, ...) {
+error * error_new(int number, char * fmt, ...) {
 	char b [4096];
 	error * e = malloc(sizeof(error));
 	e->number = number;

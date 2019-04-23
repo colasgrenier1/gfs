@@ -2,16 +2,15 @@
 
 ################################################################################
 #                                                                              #
-#                       B U I L D   T H E   K E R N E L                        #
+#                     B U I L D   A N   E X T E N S I O N                      #
 #                                                                              #
-#   Build the Generalized Formatting System's kernel.                          #
+#   Build an extension for the Generalized Formatting System                   #
 #                                                                              #
 #   USAGE:                                                                     #
-#      ./build_kernel <source directory> <configuration file> <output file>    #
+#      ./build_extension <source directory> <extension file> <output file>     #
 #                                                                              #
-#      <source directory>   : location of the code.                            #
-#      <configuration file> : the configuration file the code will load        #
-#                             automatically at startup                         #
+#      <source directory>   : location of the GFS main code.                   #
+#      <extension file>     : the file to be compiled.                         #
 #      <output file>        : the location of the output executable            #
 #                                                                              #
 ################################################################################
