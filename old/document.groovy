@@ -1,10 +1,14 @@
+class Element {
+	
+}
+
 /**
  *
  */
 class Document {
 	List content
 	Document () {
-		content = LinkedList()
+		content = LinkedList<Element>()
 	}
 }
 

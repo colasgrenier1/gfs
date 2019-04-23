@@ -1,7 +1,16 @@
 import std.container: DList;
+import std.stdio: writeln, writefln;
 
 import document;
 import parser;
+
+/**
+ * The runtime contains all external object definitions and renderers.
+ */
+class RunTime {
+
+}
+
 
 /**
  *
@@ -15,17 +24,7 @@ interface Command {
  */
 class Frame {
 	string name;
-	Element element;
 	Command[string] commands;
-	//Determines if we can pop this from the stack from another element
-	bool canPop;
-	//Determines if we can have text
-	bool textContainer;
-	//Determines if the element can have paragraphs
-	bool paragraphContainer;
-	//Used to determine when new paragraphs are required
-	bool newParagraphMayBeRequired;
-	bool newParagraphRequired;
 
 	this(string name) {
 		this.name = name;
@@ -58,13 +57,6 @@ class Context {
 	 */
 	void add(string name) {
 		frames.insert(new Frame(name));
-	}
-	void add(string name, Element element, bool canPop, bool paragraphContainer) {
-		auto f = new Frame(name);
-		f.element = element;
-		f.canPop = canPop;
-		f.paragraphContainer = paragraphContainer;
-		frames.insert(f);
 	}
 
 	/**
@@ -111,7 +103,17 @@ class Context {
  * Creates a new paragraph
  */
 void newParagraph(Document document, Context context) {
-
+	//Go to the nearest paragraph container
+	while (!(document.current().paragraphContainer)) {
+		if (!(document.current().canPop)) {
+			throw new Exception("Encountered non-poppable element in quest of pc");
+		}
+		document.pop();
+	}
+	//We are at the paragraph container
+	Paragraph p = new Paragraph();
+	document.current().addChild(p);
+	document.push(p);
 }
 
 /**
@@ -120,16 +122,16 @@ void newParagraph(Document document, Context context) {
  */
 void seekTextContainer(Document document, Context context) {
 	//Go to the nearest text or paragraph container
-	while (!(context.current().textContainer || context.current().paragraphContainer)) {
-		if (!context.current().canPop) {
+	while (!(document.current().textContainer || document.current().paragraphContainer)) {
+		if (!document.current().canPop) {
 			throw new Exception("Encountered non-poppable element in quest of");
 		}
-		context.pop();
+		document.pop();
 	}
 	//We determine which came: text or p container
 	//if not t container we know this is a pcontainer
 	//and that thus we need to append a paragraph
-	if (!context.current().textContainer) {
+	if (!document.current().textContainer) {
 		document.push(new Paragraph());
 	}
 }
@@ -140,37 +142,42 @@ void seekTextContainer(Document document, Context context) {
 void execute(Document document, Context context, DList!Token tokens) {
 	while (!tokens.empty()) {
 		//We take an element
-		auto tok = tokens.back();
-		tokens.removeBack();//remove
+		auto tok = tokens.front();
+		tokens.removeFront();//remove
 
 		//Depending on the token type
 		if (tok.type == TokenType.EMPTY) {
+			writefln("PROCESSING EMPTY");
 			//We pass
 		} else if (tok.type == TokenType.NEWLINE) {
+			writefln("PROCESSING NEWLINE");
 			//We either will add a space or we put paragraph needed
 			//The space will be added later?
-			if (context.current().newParagraphMayBeRequired) {
-				context.current().newParagraphMayBeRequired = false;
-				context.current().newParagraphRequired = true;
+			if (document.newParagraphMayBeRequired) {
+				document.newParagraphMayBeRequired = false;
+				document.newParagraphRequired = true;
 			} else {
-				context.current().newParagraphMayBeRequired = true;
+				document.newParagraphMayBeRequired = true;
 			}
 		} else if (tok.type == TokenType.SPACE) {
-
+			writefln("PROCESSING SPACE '%s'", tok.content);
 		} else if (tok.type == TokenType.WORD) {
+			writefln("PROCESSING WORD '%s'", tok.content);
 			//We start by setting that a paragraph is not required
-			if (context.current().newParagraphMayBeRequired) {
-				context.current().newParagraphMayBeRequired = false;
+			if (document.newParagraphMayBeRequired) {
+				document.newParagraphMayBeRequired = false;
 			}
 			//If a paragraph is required we need to do it.
 			//Need to backtrack until the paragraph
-			if (context.current().newParagraphRequired) {
+			if (document.newParagraphRequired) {
 				newParagraph(document, context);
 			}
 			//We add to the current paragraph
 		} else if (tok.type == TokenType.COMMAND) {
+			writefln("PROCESSING COMMAND '%s'", tok.content);
 			context.resolve(tok.content).execute(document, context, tokens);
 		} else if (tok.type == TokenType.BLOCK) {
+			writefln("PROCESSING BLOCK");
 			context.add("block");
 		}
 	}

@@ -1,0 +1,54 @@
+Allo
+
+Allo comment ca va?
+
+Moi aussi ca va bien.
+
+@book 1 Clio
+
+@preface
+This is the preface to Herodotus's first book.
+@section 1
+This is the first section.
+@section 2
+This is the second section, inside
+the first paragraph.
+
+This is still the second section, but
+continued withing the next paragraph.
+
+@codeblock numbered from=121
+PROCEDURE FUNCTION print-cust (cust AS customer)
+	DISPLAY name OF customer
+END PROCEDURE
+@end
+
+MASTER COMMAND TABLE
+
+MASTER ELEMENT TABLE
+
+MASTER RENDERING TABLE
+
+
+
+
+
+
+
+
+
+<SECTION NUMBER="2"/>
+<SECTION NUMBER="3"/>
+
+<PAGE NUMBER="x"/>
+
+
+
+DIO CASSIUS, @ital<lib>
+
+@macro<citedio><2><@smallcap<DION CASSIUS>, @ital<lib.> $2>
+
+
+
+
+@citedio<32><12>
