@@ -50,6 +50,39 @@
  *                                                                             *
  ******************************************************************************/
 
+document_frame * document_frame_new() {
+	document_frame * p = malloc(sizeof(document_frame));
+	p->size = 0;
+	p->alloc = DOCUMENT_FRAME_DEFAULT_SIZE;
+	p->elems = malloc(sizeof(document_frame_elem)*DOCUMENT_FRAME_DEFAULT_SIZE);
+	return p;
+}
+
+void document_frame_add(document_frame * frame, char * name, error*(*execute)(document * doc, token_list * tok)) {
+	if (frame->size >= frame->alloc) {
+		document_frame_elem * old = frame->elems;
+		frame->elems = malloc(sizeof(document_frame_elem)*(frame->alloc+DOCUMENT_FRAME_INCREMENT));
+		memcpy(frame->elems, old, sizeof(document_Frame_elem)*(frame->size));
+	}
+	frame->size += 1;
+	frame->elems[frame->size].nname = name;
+	frame->elems[frame->size].execute = execute;
+}
+
+///Creates a frame stack, including the topvlevel.
+document_frame_stack * document_frame_stack_new() {
+
+}
+
+void document_frame_stack_enter(document_frame_stack * stack) {
+
+}
+
+void document_frame_stack_leave(document_frame_stack * stack) {
+
+}
+
+
 
 /*******************************************************************************
  *                                                                             *
@@ -57,9 +90,9 @@
  *                                                                             *
  ******************************************************************************/
 
- document * document_new() {
+document * document_new() {
 
- }
+}
 
 void document_push(document * doc, element * elem) {
 	document_stack_push(doc->stack, elem);
@@ -81,10 +114,10 @@ void document_leave(document * doc) {
 	document_frame_stack_leave(doc->frames);
 }
 
-void document_register(document * doc, (error * (*execute)(document * doc, token_list * tokens))) {
-
+void document_register(document * doc, char * name, (error * (*execute)(document * doc, token_list * tokens))) {
+	document_frame_stack_register(doc->frames, name, execute);
 }
 
 error * (*)(document * doc, token_list * tokens) document_resolve(document * doc, char * name) {
-
+	return document_frame_stack_resolve(doc->frames, name);
 }

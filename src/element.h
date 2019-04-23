@@ -3,6 +3,12 @@
 
 #include <stdbool.h>
 
+/*******************************************************************************
+ *                                                                             *
+ *                      E L E M E N T   C H I L D R E N                        *
+ *                                                                             *
+ ******************************************************************************/
+
 /**
  * An element list element.
  */
@@ -20,9 +26,31 @@ typedef struct {
 } element_child_list;
 
 /**
+ * Creates an element child list.
+ */
+element_child_list * element_child_list_new();
+
+/**
+ *
+ */
+bool element_child_list_empty(element_child_list * list);
+
+/**
  * Adds an element to a child list.
  */
 void element_child_list_add(element_child_list * list, element * elem);
+
+/**
+ * Frees the element child list.
+ * NOTE: does not calls element_free() on each child element!.
+ */
+void element_child_list_free(element_child_list * list);
+
+/*******************************************************************************
+ *                                                                             *
+ *                               E L E M E N T                                 *
+ *                                                                             *
+ ******************************************************************************/
 
 /**
  * A document element.

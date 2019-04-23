@@ -1,6 +1,7 @@
 #ifndef __DOCUMENT
 #define __DOCUMENT
 
+#include "command.h"
 #include "element.h"
 
 /*******************************************************************************
@@ -36,27 +37,32 @@ element * document_stack_pop(document_stack * stack);
  *                                                                             *
  ******************************************************************************/
 
+#define DOCUMENT_FRAME_DEFAULT_SIZE 50
+#define DOCUMENT_FRAME_INCREMENT 10
+
 typedef struct {
 	char * name;
-	error * (*execute)(document * doc, token_list * tokens);
+	command * cmd;
 } document_frame_elem;
 
 ///Contains variables
 typedef struct {
+	int size;
+	int alloc;
 	document_frame_elem * elems;
 } document_frame;
 
+///Creates a new frame
+document_frame * document_frame_new();
+
 ///Add a command to a frame
-void document_frame_add(document_frame * frame, error*(*execute)(document * doc, token_list * tok));
+void document_frame_add(document_frame * frame, char * name, command * cmd);
 
 typedef struct {
 	document_frame * frame;
 	document_frame_stack_elem * bottom;
 } document_frame_stack_elem;
 
-/**
- * The document frame stack has
- */
 typedef struct {
 	document_frame * topevel;
 	document_frame_stack_elem * top;
@@ -72,7 +78,7 @@ void document_frame_stack_enter(document_frame_stack * stack);
 void document_frame_stack_leave(document_frame_stack * stack);
 
 ///Add a command
-void document_frame_stack_add(document_frame_stack * stack, char * name, (error* (*execute)(document * doc, token_list * tokens)));
+void document_frame_stack_add(document_frame_stack * stack, char * name, command * cmd);
 
 ///Resolve a command
 void document_frame_stack_resolve()
@@ -89,9 +95,9 @@ void document_frame_stack_resolve()
  */
 typedef struct {
 	///Stack of elements.
-	document_stack stack;
+	document_stack * stack;
 	///Stack of frames (variables).
-	document_frame_list frames;
+	document_frame_list * frames;
 } document;
 
 ///Allocates a document but does not do intiialization: use runtime_document_mew.
