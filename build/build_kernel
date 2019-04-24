@@ -31,7 +31,9 @@ outf = os.path.abspath(sys.argv[3])
 tmpdir = tempfile.TemporaryDirectory()
 dir = tmpdir.name
 
-#TODO generate the configuration file default parameter in source.
+#generate the configuration file default parameter in source.
+print("GENERATION AUTOMATIC CONFIGURATION FILE HEADER")
+open(os.path.join(dir, "configurationfile.h"), "w+").write("#define CONFIGURATION_FILE \"" + repr(conff)[1:-2] + "\"\n")
 
 #We copy the source files into
 print("COPYING SOURCE FILES INTO TEMPORARY DIRECTORY")
@@ -46,7 +48,9 @@ os.chdir(dir)
 for file in cfiles:
 	print("COMPILING " + str(file))
 	ofile = file[:-2] + ".o"
-	subprocess.run(["gcc", "-O0", "-c", "-o", ofile, file])
+	if subprocess.run(["gcc", "-O0", "-c", "-o", ofile, file]).returncode != 0:
+		print("compilation failed!")
+		sys.exit(-1)
 	ofiles.append(ofile)
 
 subprocess.run(["ls", "-lh", dir])

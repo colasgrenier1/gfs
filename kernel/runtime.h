@@ -173,7 +173,7 @@ void runtime_free(runtime * rt);
 /**
  * Creates a document, filled with the runtime.
  */
-document * runtime_document_new(runtime * rt);
+document * new_document(runtime * rt);
 
 /**
  * Execute a list of tokens on a document.
@@ -189,6 +189,16 @@ error * document_from_file(runtime * rt, FILE *f);
 /**
  * Renders a document.
  */
-error * document_render(document * doc, char * format);
+error * render(document * doc, char * format, FILE * file);
+
+/**
+ *
+ */
+error * render_element(runtime * rt, element * elem, FILE * file);
+
+/**
+ *
+ */
+error * render_element_children(runtime * rt, element * elem, char * fmt, FILE * file);
 
 #endif

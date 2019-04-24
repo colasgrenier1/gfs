@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/bin/python3
 
 ################################################################################
 #                                                                              #
@@ -16,4 +16,43 @@
 ################################################################################
 
 import os
+import shutil
+import subprocess
 import sys
+import tempfile
+
+#
+# G E T   C O M M A N D   L I N E   A R G U M E N T S
+#
+
+if len(sys.argv) != 4:
+	raise Exception("INVALID!\nUsage: <src> <ext> <out>")
+
+srcdir = os.path.abspath(sys.argv[1])
+extfil = os.path.abspath(sys.argv[2])
+outfil = os.path.abspath(sys.argv[3])
+
+#
+# P U T  S O U R C E   I N T O   D I R E C T O R Y
+#
+
+#Create a temporary directory
+tmpdir = tempfile.TemporaryDirectory()
+dir = tmpdir.name
+
+#Include files
+idir = os.path.join(dir, "gfs/")
+os.mkdir(idir)
+
+#Copy the files
+for f in os.listdir(srcdir):
+	shutil.copyfile(os.path.join(srcdir, f), os.path.join(idir, f))
+
+#Go to the temp directory for the compilation step
+os.chdir(dir)
+
+#
+# C O M P I L E
+#
+
+subprocess.run(["gcc", "-fPIC", "-I"+dir, "-shared", "-o", outfil, extfil])

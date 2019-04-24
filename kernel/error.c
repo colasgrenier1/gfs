@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <string.h>
 
 #include "error.h"
 
@@ -9,6 +10,8 @@ error * error_new(int number, char * fmt, ...) {
 	va_list argptr;
 	va_start(argptr, fmt);
 	vsprintf(b, fmt, argptr);
+	va_end(argptr);
+	e->message = strdup(b);
 	return e;
 }
 
@@ -17,7 +20,7 @@ void error_write(FILE * file, error * err) {
 }
 
 void error_display(error * err) {
-	printf("E%0d %s\n", err->number, err->message);
+	printf("E%06d %s\n", err->number, err->message);
 }
 
 void error_free(error * err) {
