@@ -1,4 +1,7 @@
+#include <string.h>
+
 #include "document.h"
+#include "command.h"
 
 /*******************************************************************************
  *                                                                             *
@@ -6,13 +9,13 @@
  *                                                                             *
  ******************************************************************************/
 
- element_stack * document_stack_new() {
-	 element_stack * p = malloc(sizeof(element_stack));
+ document_stack * document_stack_new() {
+	 document_stack * p = malloc(sizeof(document_stack));
 	 p->top = NULL;
  }
 
  void document_stack_push(document_stack * stack, element * elem) {
-	 document_stack_elem * n = malloc(sizeof(document_stack_elem))
+	 document_stack_elem * n = malloc(sizeof(document_stack_elem));
 	 n->elem = elem;
 	 n->prev = NULL;
 	 if (stack->top == NULL) {
@@ -58,19 +61,23 @@ document_frame * document_frame_new() {
 	return p;
 }
 
-void document_frame_add(document_frame * frame, char * name, error*(*execute)(document * doc, token_list * tok)) {
+void document_frame_add(document_frame * frame, char * name, command * cmd) {
 	if (frame->size >= frame->alloc) {
 		document_frame_elem * old = frame->elems;
 		frame->elems = malloc(sizeof(document_frame_elem)*(frame->alloc+DOCUMENT_FRAME_INCREMENT));
-		memcpy(frame->elems, old, sizeof(document_Frame_elem)*(frame->size));
+		memcpy(frame->elems, old, sizeof(document_frame_elem)*(frame->size));
 	}
 	frame->size += 1;
-	frame->elems[frame->size].nname = name;
-	frame->elems[frame->size].execute = execute;
+	frame->elems[frame->size].name = name;
+	frame->elems[frame->size].cmd = cmd;
 }
 
 ///Creates a frame stack, including the topvlevel.
 document_frame_stack * document_frame_stack_new() {
+
+}
+
+void document_frame_stack_register(document_frame_stack * stack, char * name, command * cmd) {
 
 }
 
@@ -82,6 +89,9 @@ void document_frame_stack_leave(document_frame_stack * stack) {
 
 }
 
+command * document_frame_stack_resolve(document_frame_stack * stack, char * name) {
+	
+}
 
 
 /*******************************************************************************
@@ -114,10 +124,10 @@ void document_leave(document * doc) {
 	document_frame_stack_leave(doc->frames);
 }
 
-void document_register(document * doc, char * name, (error * (*execute)(document * doc, token_list * tokens))) {
-	document_frame_stack_register(doc->frames, name, execute);
+void document_register(document * doc, command * cmd, char * name) {
+	document_frame_stack_register(doc->frames, name, cmd);
 }
 
-error * (*)(document * doc, token_list * tokens) document_resolve(document * doc, char * name) {
+command * document_resolve(document * doc, char * name) {
 	return document_frame_stack_resolve(doc->frames, name);
 }

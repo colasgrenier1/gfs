@@ -1,11 +1,12 @@
 #ifndef __COMMAND
 #define __COMMAND
 
-#include "document.h"
-#include "parser.h"
-
 //Foward declaration
 typedef struct command command;
+
+//includes
+#include "document.h"
+#include "parser.h"
 
 /*
  * A command structure.
@@ -23,6 +24,6 @@ typedef struct command {
 void command_new(error* (*execute)(command * cmd, document * doc, token_list * tok), void * private);
 
 ///Execute the command.
-void command_execute(command * cmd, document * doc, token_list * tok);
+error * command_execute(command * cmd, document * doc, token_list * tok);
 
 #endif

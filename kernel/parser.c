@@ -19,10 +19,42 @@ token * token_alloc() {
 void token_content_append(token * tok, char c) {
 	char * nb = (char*)malloc(sizeof(char)*(strlen(tok->content)+4));
 	strcpy(nb, tok->content);
-	strcat(nb, &c, 1);
+	strncat(nb, &c, 1);
 	free(tok->content);
 	tok->content = nb;
 }
+
+token * token_empty_new() {
+	token * t = (token*)malloc(sizeof(token));
+	t->type = EMPTY;
+	return t;
+}
+token * token_newline_new(int line, int col, char c) {
+	token * t = (token*)malloc(sizeof(token));
+	t->type = NEWLINE;
+	return t;
+}
+token * token_space_new(int line, int col, char c) {
+	token * t = (token*)malloc(sizeof(token));
+	t->type = SPACE;
+	return t;
+}
+token * token_word_new(int line, int col, char c) {
+	token * t = (token*)malloc(sizeof(token));
+	t->type = WORD;
+	return t;
+}
+token * token_command_new(int line, int col) {
+	token * t = (token*)malloc(sizeof(token));
+	t->type = COMMAND;
+	return t;
+}
+token * token_block_new() {
+	token * t = (token*)malloc(sizeof(token));
+	t->type = BLOCK;
+	return t;
+}
+
 
 /*******************************************************************************
  *                                                                             *
@@ -109,12 +141,12 @@ token * token_list_remove_last(token_list * list) {
 
 token_list * token_list_dup(token_list * list) {
 	token_list * newlist = token_list_new();
-	token_list_elem * cur = list->first;
+	token_list_element * cur = list->first;
 	while (cur != NULL) {
 		token * t = token_alloc();
 		t->type = cur->tok->type;
 		if (t->type == BLOCK) {
-			t->contents = token_list_dup(cur->contents);
+			t->contents = token_list_dup(cur->tok->contents);
 		} else {
 			t->content = t->content;
 		}
@@ -141,7 +173,7 @@ error * parse(FILE * file, int * line, int * col, token_list ** list, bool inblo
 		int r = fgetc(file);
 		if (r==EOF) {
 			//Free the list since there is an error
-			token_list_free(l)
+			token_list_free(l);
 			if (inblock) {
 				//There is a syntax error.
 				return error_new(301, "END OF FILE REACHED WHEN INSIDE A BLOCK : EXPECTING '>'");
@@ -168,11 +200,11 @@ error * parse(FILE * file, int * line, int * col, token_list ** list, bool inblo
 			if (!token_list_empty(l) && token_list_last(l)->type==SPACE) {
 				token_content_append(token_list_last(l), c);
 			} else {
-				token_list_add(l, token_spae_new(*line, *col, c));
+				token_list_add(l, token_space_new(*line, *col, c));
 			}
 			//Tabs are 8 character
 			if (c=='\t') {
-				*col = (col + 8) % (col/8);
+				*col = (*col + 8) % (*col/8);
 			} else {
 				*col += 1;
 			}
@@ -204,7 +236,7 @@ error * parse(FILE * file, int * line, int * col, token_list ** list, bool inblo
 				//We begin a block
 				token_list * child = token_list_new();
 				//We try to parse
-				error * e = parse(file, line, col, &child);
+				error * e = parse(file, line, col, &child, false);
 				if (e != NULL) {
 					//The parsing has failed
 					//We must cleanup and return an error
@@ -232,15 +264,15 @@ error * parse(FILE * file, int * line, int * col, token_list ** list, bool inblo
 				if (inblock) {
 					//Everything is OK.
 					*list = l;
-					return NULL
+					return NULL;
 				} else {
 					//Fail, we cleanup and return the error.
 					token_list_free(l);
-					return error_new(302, "'>' REACHED WHEN NOT INSIDE A BLOCK")
+					return error_new(302, "'>' REACHED WHEN NOT INSIDE A BLOCK");
 				}
 			}
 		} else if (c==';') {
-			if (!token_list_empty(l) && token_list_last(l)->type=COMMAND) {
+			if (!token_list_empty(l) && token_list_last(l)->type==COMMAND) {
 				token_list_add(l, token_empty_new());
 			} else {
 				if (!token_list_empty(l) && token_list_last(l)->type==WORD) {
@@ -267,8 +299,10 @@ error * parse(FILE * file, int * line, int * col, token_list ** list, bool inblo
  ******************************************************************************/
 
 void token_list_dump_indent(FILE * file, token_list * list, int num) {
-	token_list_element * cur = list->first;
-	while (cur != NULL) {
+	token_list_element * e = list->first;
+	token * cur;
+	while (e != NULL) {
+		cur = e->tok;
 		if (cur->type==EMPTY) {
 			fprintf(file, "%.*s%-10s\n", num, "", "EMPTY");
 		} else if (cur->type==NEWLINE) {
@@ -285,7 +319,7 @@ void token_list_dump_indent(FILE * file, token_list * list, int num) {
 		} else {
 			fprintf(file, "%.*s%-10s\n", num, "", "???????");
 		}
-		cur = cur->next;
+		e = e->next;
 	}
 }
 

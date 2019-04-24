@@ -7,13 +7,13 @@ error * error_new(int number, char * fmt, ...) {
 	error * e = malloc(sizeof(error));
 	e->number = number;
 	va_list argptr;
-	va_start(argptf, fmt);
-	vsprintf(b, format, argptr);
+	va_start(argptr, fmt);
+	vsprintf(b, fmt, argptr);
 	return e;
 }
 
 void error_write(FILE * file, error * err) {
-	fprintf("E%06d %s\n", err->number, err->message);
+	fprintf(file, "E%06d %s\n", err->number, err->message);
 }
 
 void error_display(error * err) {

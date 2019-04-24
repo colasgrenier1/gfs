@@ -1,3 +1,4 @@
+#include <dirent.h>
 #include <dlfcn.h>
 #include <stdbool.h>
 #include <stdarg.h>
@@ -226,5 +227,18 @@ error * runtime_load(runtime * rt, char * file) {
 			 runtime_renderer_table_add(rt->renderers, tmp1, tmp2, (error* (*)(element * elem, FILE * file))rlist[idx]);
 		 }
 		 idx += 1;
+	 }
+ }
+
+ error * runtime_loaddir(runtime * rt, char * dir) {
+	 DIR * d;
+	 struct dirent * de;
+	 d = opendir(dir);
+	 if (d != NULL) {
+		 while ((de = readdir(d)) != NULL) {
+			 //if (strlen(de->d_name)>4 && strcmp(de->d_name+,".gfx")==0)
+		 }
+	 } else {
+		 return error_new(12, "COULD NOT OPEN DIRECTORY '%s'", dir);
 	 }
  }

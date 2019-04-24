@@ -71,7 +71,7 @@ token * token_block_new();
  * Append a character to the token's content member.
  * WARNING: does not check type! Do not use with BLOCK tokens.
  */
-void token_content_append(char c);
+void token_content_append(token * tok, char c);
 
 
 /*******************************************************************************
@@ -100,7 +100,7 @@ token_list * token_list_new();
 bool token_list_empty(token_list * list);
 
 ///Add a token to the list
-void * token_list_add(token_list * list, token * tok);
+void token_list_add(token_list * list, token * tok);
 
 ///Remove the first element from the list
 token * token_list_pop(token_list * list);

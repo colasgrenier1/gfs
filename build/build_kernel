@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/bin/python3
 
 ################################################################################
 #                                                                              #
@@ -17,4 +17,40 @@
 ################################################################################
 
 import os
+import shutil
+import subprocess
 import sys
+import tempfile
+
+#Get the variables
+srcdir = os.path.abspath(sys.argv[1])
+conff = os.path.abspath(sys.argv[2])
+outf = os.path.abspath(sys.argv[3])
+
+#make a temp dir.
+tmpdir = tempfile.TemporaryDirectory()
+dir = tmpdir.name
+
+#TODO generate the configuration file default parameter in source.
+
+#We copy the source files into
+print("COPYING SOURCE FILES INTO TEMPORARY DIRECTORY")
+for file in os.listdir(srcdir):
+	shutil.copyfile(os.path.join(srcdir, file), os.path.join(dir, file))
+
+#We compile every .c file
+print("COMPILING SOURCE FILES")
+cfiles = [f for f in os.listdir(dir) if f.endswith(".c")]
+ofiles = []
+os.chdir(dir)
+for file in cfiles:
+	print("COMPILING " + str(file))
+	ofile = file[:-2] + ".o"
+	subprocess.run(["gcc", "-O0", "-c", "-o", ofile, file])
+	ofiles.append(ofile)
+
+subprocess.run(["ls", "-lh", dir])
+
+#We join them
+print("LINKING INTO FINAL EXECUTABLE")
+subprocess.run(["gcc", "-O0", "-rdynamic", "-o", outf, *ofiles, "-ldl"])

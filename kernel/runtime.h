@@ -154,6 +154,11 @@ void runtime_log(runtime * rt, char * fmt, ...);
 error * runtime_load(runtime * rt, char * file);
 
 /**
+ * Load all the .gfx files in a directory
+ */
+error * runtime_loaddir(runtime * rt, char * dir);
+
+/**
  * Frees a runtime and all its associated modules.
  */
 void runtime_free(runtime * rt);

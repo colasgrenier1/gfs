@@ -100,7 +100,7 @@ void document_frame_stack_leave(document_frame_stack * stack);
 void document_frame_stack_add(document_frame_stack * stack, char * name, command * cmd);
 
 ///Resolve a command
-void document_frame_stack_resolve();
+command * document_frame_stack_resolve(document_frame_stack * stack, char * name);
 
 
 /*******************************************************************************
