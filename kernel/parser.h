@@ -1,6 +1,22 @@
 #ifndef __PARSER
 #define __PARSER
 
+#include <stdbool.h>
+
+#include "element.h"
+#include "error.h"
+
+/*******************************************************************************
+ *                                                                             *
+ *                   F O W A R D   D E C L A R A T I O N S                     *
+ *                                                                             *
+ ******************************************************************************/
+
+typedef enum token_type token_type;
+typedef struct token token;
+typedef struct token_list_element token_list_element;
+typedef struct token_list token_list;
+
 /*******************************************************************************
  *
  *                      T O K E N    D E F I N I T I O N
@@ -10,7 +26,7 @@
 /**
  * Token type.
  */
-typedef enum {
+typedef enum token_type {
 	EMPTY = 0,
 	NEWLINE = 1,
 	SPACE = 2,
@@ -22,7 +38,7 @@ typedef enum {
 /**
  * A token.
  */
-typedef struct {
+typedef struct token {
 	///Type of the token
 	token_type type;
 	///Line number
@@ -65,14 +81,14 @@ void token_content_append(char c);
  ******************************************************************************/
 
 ///Token list element.
-typedef struct {
+typedef struct token_list_element {
 	token * tok;
 	token_list_element * next;
 	token_list_element * previous;
 } token_list_element;
 
 ///Token list
-typedef struct {
+typedef struct token_list {
 	token_list_element * first;
 	token_list_element * last;
 } token_list;
@@ -108,9 +124,9 @@ void token_list_free(token_list * list);
  ******************************************************************************/
 
 /**
- * Parses the file content, returns the token list.
+ * Parses the file content, returns the token list in the buffer.
  */
-error * parse(FILE * file, token_list ** list);
+error * parse(FILE * file, int * line, int * col, token_list ** list, bool inblock);
 
 /*******************************************************************************
  *

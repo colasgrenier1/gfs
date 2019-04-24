@@ -257,4 +257,38 @@ error * parse(FILE * file, int * line, int * col, token_list ** list, bool inblo
 			}
 		}
 	}
+	//We should never reach this point
+}
+
+/*******************************************************************************
+ *
+ *                      D E B U G    F U N C T I O N S
+ *
+ ******************************************************************************/
+
+void token_list_dump_indent(FILE * file, token_list * list, int num) {
+	token_list_element * cur = list->first;
+	while (cur != NULL) {
+		if (cur->type==EMPTY) {
+			fprintf(file, "%.*s%-10s\n", num, "", "EMPTY");
+		} else if (cur->type==NEWLINE) {
+			fprintf(file, "%.*s%-10s\n", num, "", "NEWLINE");
+		} else if (cur->type==SPACE) {
+			fprintf(file, "%.*s%-10s '%s'\n", num, "", "SPACE", cur->content);
+		} else if (cur->type==WORD) {
+			fprintf(file, "%.*s%-10s '%s'\n", num, "", "WORD", cur->content);
+		} else if (cur->type==COMMAND) {
+			fprintf(file, "%.*s%-10s '%s'\n", num, "", "COMMAND", cur->content);
+		} else if (cur->type==BLOCK) {
+			fprintf(file, "%.*s%-10s\n", num, "", "BLOCK");
+			token_list_dump_indent(file, cur->contents, num + 4);
+		} else {
+			fprintf(file, "%.*s%-10s\n", num, "", "???????");
+		}
+		cur = cur->next;
+	}
+}
+
+void token_list_dump(FILE * file, token_list * list) {
+	token_list_dump_indent(file, list, 0);
 }

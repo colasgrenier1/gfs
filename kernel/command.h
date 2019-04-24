@@ -4,10 +4,13 @@
 #include "document.h"
 #include "parser.h"
 
+//Foward declaration
+typedef struct command command;
+
 /*
  * A command structure.
  */
-typedef struct{
+typedef struct command {
 	///A function
 	error* (*execute)(command * cmd, document * doc, token_list * tok);
 	///Private member

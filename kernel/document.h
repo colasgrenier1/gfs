@@ -1,8 +1,27 @@
 #ifndef __DOCUMENT
 #define __DOCUMENT
 
-#include "command.h"
-#include "element.h"
+/*******************************************************************************
+ *                                                                             *
+ *                   F O W A R D   D E C L A R A T I O N S                     *
+ *                                                                             *
+ ******************************************************************************/
+
+typedef struct document_stack_elem document_stack_elem;
+typedef struct document_stack document_stack;
+typedef struct document_frame_elem document_frame_elem;
+typedef struct document_frame document_frame;
+typedef struct document_frame_stack_elem document_frame_stack_elem;
+typedef struct document document;
+
+/*******************************************************************************
+ *                                                                             *
+ *                          D E P E N D E N C I E S                            *
+ *                                                                             *
+ ******************************************************************************/
+
+ #include "command.h"
+ #include "element.h"
 
 /*******************************************************************************
  *                                                                             *
@@ -10,12 +29,12 @@
  *                                                                             *
  ******************************************************************************/
 
-typedef struct {
+typedef struct document_stack_elem {
 	element * elem;
-	element_stack_elem * prev;
+	document_stack_elem * prev;
 } document_stack_elem;
 
-typedef struct {
+typedef struct document_stack {
 	document_stack_elem * top;
 } document_stack;
 
@@ -40,13 +59,13 @@ element * document_stack_pop(document_stack * stack);
 #define DOCUMENT_FRAME_DEFAULT_SIZE 50
 #define DOCUMENT_FRAME_INCREMENT 10
 
-typedef struct {
+typedef struct document_frame_elem {
 	char * name;
 	command * cmd;
 } document_frame_elem;
 
 ///Contains variables
-typedef struct {
+typedef struct document_frame {
 	int size;
 	int alloc;
 	document_frame_elem * elems;
@@ -58,12 +77,12 @@ document_frame * document_frame_new();
 ///Add a command to a frame
 void document_frame_add(document_frame * frame, char * name, command * cmd);
 
-typedef struct {
+typedef struct document_frame_stack_elem {
 	document_frame * frame;
 	document_frame_stack_elem * bottom;
 } document_frame_stack_elem;
 
-typedef struct {
+typedef struct document_frame_stack {
 	document_frame * topevel;
 	document_frame_stack_elem * top;
 } document_frame_stack;
@@ -81,7 +100,7 @@ void document_frame_stack_leave(document_frame_stack * stack);
 void document_frame_stack_add(document_frame_stack * stack, char * name, command * cmd);
 
 ///Resolve a command
-void document_frame_stack_resolve()
+void document_frame_stack_resolve();
 
 
 /*******************************************************************************
@@ -93,11 +112,11 @@ void document_frame_stack_resolve()
 /**
  * One master document object.
  */
-typedef struct {
+typedef struct document {
 	///Stack of elements.
 	document_stack * stack;
 	///Stack of frames (variables).
-	document_frame_list * frames;
+	document_frame_stack * frames;
 } document;
 
 ///Allocates a document but does not do intiialization: use runtime_document_mew.
@@ -116,9 +135,9 @@ element * document_pop(document * doc);
 void document_enter(document * doc);
 
 ///Registers a new command.
-void document_register(document * doc, PTR, char * name);
+void document_register(document * doc, command * cmd, char * name);
 
 ///Resolves a command or NULL.
-PTR *  document_resolve(document * doc, char * name);
+command *  document_resolve(document * doc, char * name);
 
-#endif __DOCUMENT
+#endif

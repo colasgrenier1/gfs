@@ -1,7 +1,17 @@
-#ifndef __ELEMENT
-#define __ELEMENT
+#ifndef ELEMENT
+#define ELEMENT
 
 #include <stdbool.h>
+
+/*******************************************************************************
+ *                                                                             *
+ *                  I N I T I A L   D E C L A R A T I O N S                    *
+ *                                                                             *
+ ******************************************************************************/
+
+typedef struct element element;
+typedef struct element_child_list element_child_list;
+typedef struct element_child_list_elem element_child_list_elem;
 
 /*******************************************************************************
  *                                                                             *
@@ -12,7 +22,7 @@
 /**
  * An element list element.
  */
-typedef struct {
+typedef struct element_child_list_elem {
 	element * elem;
 	element_child_list_elem * next;
 } element_child_list_elem;
@@ -20,7 +30,7 @@ typedef struct {
 /**
  * A list of elements.
  */
-typedef struct {
+typedef struct element_child_list {
 	element_child_list_elem * first;
 	element_child_list_elem * last;
 } element_child_list;
@@ -55,7 +65,7 @@ void element_child_list_free(element_child_list * list);
 /**
  * A document element.
  */
-typedef struct {
+typedef struct element {
 	///Unique name of the element type.
 	const char * name;
 	///Line at which this element begins
@@ -72,21 +82,23 @@ typedef struct {
 	element_child_list * children;
 	///Private use for the element.
 	void * private;
+	///Destructor of the private use area
+	void (*destroy) (void *);
 } element;
 
 /**
  *
  */
-element * element_new(const char * name);
+element * element_new(const char * name, int line, int col);
 
 /**
- * Free the element.
+ * Free the element & its children elements.
  */
 void element_free(element * elem);
 
 /**
  * Add an element as a child to an element.
  */
-void element_add_child(element * elem, element * elem);
+void element_add_child(element * elem, element * child);
 
 #endif
