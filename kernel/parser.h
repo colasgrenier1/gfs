@@ -3,8 +3,6 @@
 
 #include <stdbool.h>
 
-#include "element.h"
-#include "error.h"
 
 /*******************************************************************************
  *                                                                             *
@@ -16,6 +14,15 @@ typedef enum token_type token_type;
 typedef struct token token;
 typedef struct token_list_element token_list_element;
 typedef struct token_list token_list;
+
+/*******************************************************************************
+ *                                                                             *
+ *                          D E P E N D E N C I E S                            *
+ *                                                                             *
+ ******************************************************************************/
+
+#include "element.h"
+#include "error.h"
 
 /*******************************************************************************
  *

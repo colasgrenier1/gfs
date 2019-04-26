@@ -6,12 +6,11 @@
 #include <stdlib.h>
 
 typedef struct {
-	int number;
 	char * message;
 } error;
 
 ///Write an error message
-error * error_new(int number, char * fmt, ...);
+error * error_new(char * fmt, ...);
 
 ///Write an error message to file.
 void error_write(FILE * file, error * err);

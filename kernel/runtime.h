@@ -24,11 +24,11 @@ typedef struct runtime runtime;
  *                                                                             *
  ******************************************************************************/
 
- #include "document.h"
- #include "element.h"
- #include "error.h"
- #include "parser.h"
-
+#include "command.h"
+#include "document.h"
+#include "element.h"
+#include "error.h"
+#include "parser.h"
 
 /*******************************************************************************
  *                                                                             *
@@ -54,67 +54,20 @@ error * runtime_extension_table_add(runtime_extension_table * tbl, char * name);
 
 typedef struct runtime_element_table_elem {
 	char * name;
-	error * (*free) (element * elem);
+	element_control_block * ecb;
 } runtime_element_table_elem;
 
 typedef struct runtime_element_table {
 	int size;
 	int alloc;
 	runtime_element_table_elem * tbl;
-} runtime_element_table;
+}  runtime_element_table;
 
 runtime_element_table * runtime_element_table_new();
 
-error * runtime_element_table_add(runtime_element_table * tbl,
-	char * name, error * (*free) (element * elem));
+error * runtime_element_table_add(runtime_element_table * tbl, char * name, element_control_block * ecb);
 
-error * runtime_element_table_setfree(runtime_element_table * tbl,
-	char * name, error * (*free) (element * elem));
-
-#define RUNTIME_COMMAND_TABLE_DEFAULT_SIZE 300
-#define RUNTIME_COMMAND_TABLE_INCREMENT 100
-
-typedef struct runtime_command_table_elem {
-	char * name;
-	error * (*execute)(document * doc, token_list * tokens);
-} runtime_command_table_elem;
-
-typedef struct runtime_command_table {
-	int size;
-	int alloc;
-	runtime_command_table_elem * tbl;
-} runtime_command_table;
-
-///Create a new runtime table.
-runtime_command_table * runtime_command_table_new();
-
-///Add to a runtime table.
-error * runtime_command_table_add(runtime_command_table * tbl, char * name, error * (*execute)(document * doc, token_list * tokens));
-
-#define RUNTIME_RENDERER_TABLE_DEFAULT_SIZE 300
-#define RUNTIME_RENDERED_TABLE_INCREMENT 100
-
-typedef struct runtime_renderer_table_elem {
-	char * fmt;
-	char * elem;
-	error * (*render) (element * elem, FILE * file);
-} runtime_renderer_table_elem;
-
-typedef struct runtime_renderer_table {
-	int size;
-	int alloc;
-	runtime_renderer_table_elem * tbl;
-} runtime_renderer_table;
-
-///Create a renderer table.
-runtime_renderer_table * runtime_renderer_table_new();
-
-///Add an element to the renderer table.
-error * runtime_renderer_table_add(runtime_renderer_table * tbl,
-	char * elem, char * fmt, error * (*render)(element * elem, FILE * file));
-
-///Returns the command pointer for the element & format.
-error* (*runtime_renderer_table_get(runtime * rt, char * fmt, char * elem))(element * elem, FILE * file);
+element_control_block * runtime_element_table_get(runtime_element_table * tbl, char * name);
 
 /*******************************************************************************
  *                                                                             *
@@ -128,14 +81,21 @@ error* (*runtime_renderer_table_get(runtime * rt, char * fmt, char * elem))(elem
 typedef struct runtime {
 	///Log output.
 	FILE * log;
-	///The plugin table
+	/**
+	 * Runtime tables.
+	 */
+	///A list of extension files
 	runtime_extension_table * extensions;
-	///The element table (contains name and destructors).
+	///The element table
 	runtime_element_table * elements;
-	///The command table
-	runtime_command_table * commands;
-	///The renderer table
-	runtime_renderer_table * renderers;
+	///The table of commands
+	command_table * commands;
+	/**
+	 * Builtin in element element control blocks.
+	 */
+	element_control_block * document_ecb;
+	element_control_block * paragraph_ecb;
+	element_control_block * text_ecb;
 } runtime;
 
 /**
@@ -163,6 +123,41 @@ error * runtime_loaddir(runtime * rt, char * dir);
  */
 void runtime_free(runtime * rt);
 
+/*******************************************************************************
+ *                                                                             *
+ *                  R U N T I M E   R E G I S T R A T I O N                    *
+ *                                                                             *
+ ******************************************************************************/
+
+/**
+ * Register a command on the runtime.
+ */
+error * runtime_register_command(runtime * rt, char * name, command * cmd);
+
+/**
+ *
+ */
+error * runtime_register_element(runtime * rt, char * name, element_control_block * ecb);
+
+/**
+ * Get an element control block.
+ */
+element_control_block * runtime_element_control_block_get(runtime * rt, char *name);
+
+/**
+ * Register a renderer for a particular element and format.
+ */
+error * runtime_register_renderer(runtime * rt, char * elem, char * fmt, renderer * r);
+
+/**
+ * Send an option to an element of this runtime (specificfally the element control block).
+ */
+error * runtime_set_element_option(runtime * rt, char * elem, char * opt, void * body);
+
+/**
+ * Send an option to a renderer of this runtime.
+ */
+error * runtime_set_renderer_option(runtime * rt, char * elem, char * fmt, char *opt, void * body);
 
 /*******************************************************************************
  *
@@ -194,11 +189,19 @@ error * render(document * doc, char * format, FILE * file);
 /**
  *
  */
-error * render_element(runtime * rt, element * elem, FILE * file);
+error * render_element(element * elem, FILE * file);
 
 /**
  *
  */
-error * render_element_children(runtime * rt, element * elem, char * fmt, FILE * file);
+error * render_element_children(element * elem, char * fmt, FILE * file);
+
+/*******************************************************************************
+ *                                                                             *
+ *                                 D E B U G                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+void * runtime_dump_tables(runtime * rt, FILE * file);
 
 #endif

@@ -176,7 +176,7 @@ error * parse(FILE * file, int * line, int * col, token_list ** list, bool inblo
 			token_list_free(l);
 			if (inblock) {
 				//There is a syntax error.
-				return error_new(301, "END OF FILE REACHED WHEN INSIDE A BLOCK : EXPECTING '>'");
+				return error_new("END OF FILE REACHED WHEN INSIDE A BLOCK : EXPECTING '>'");
 			} else {
 				*list = l;
 				return NULL;
@@ -268,7 +268,7 @@ error * parse(FILE * file, int * line, int * col, token_list ** list, bool inblo
 				} else {
 					//Fail, we cleanup and return the error.
 					token_list_free(l);
-					return error_new(302, "'>' REACHED WHEN NOT INSIDE A BLOCK");
+					return error_new("'>' REACHED WHEN NOT INSIDE A BLOCK");
 				}
 			}
 		} else if (c==';') {

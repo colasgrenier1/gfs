@@ -1,7 +1,7 @@
 #include <gfs/gfs.h>
 
 //Function to create an italic node.
-error * bold_function(command * cmd, document * doc, token_list * tokens) {
+error * bold_function(document * doc, token_list * tokens, void * private) {
 	return NULL;
 };
 
@@ -11,9 +11,9 @@ command bold_command = {
 		.free = NULL,
 };
 
-error * bold_render_html(runtime * rt, element * elem, FILE * file) {
+error * bold_render_html(element * elem, FILE * file) {
 	fprintf(file, "<b>");
-	error * e = render_element_children(rt, elem, "html", file);
+	error * e = render_element_children(elem, "html", file);
 	if (e != NULL) {
 		return e;
 	}
@@ -21,9 +21,9 @@ error * bold_render_html(runtime * rt, element * elem, FILE * file) {
 	return NULL;
 }
 
-error * bold_render_latex(runtime *rt, element * elem, FILE * file) {
+error * bold_render_latex(element * elem, FILE * file) {
 	fprintf(file, "\\textbf{");
-	error * e = render_element_children(rt, elem, "latex", file);
+	error * e = render_element_children(elem, "latex", file);
 	if (e != NULL) {
 		return e;
 	}
@@ -31,9 +31,9 @@ error * bold_render_latex(runtime *rt, element * elem, FILE * file) {
 	return NULL;
 }
 
-error * bold_render_xml(runtime * rt, element * elem, FILE * file) {
+error * bold_render_xml(element * elem, FILE * file) {
 	fprintf(file, "<BOLD>");
-	error * e = render_element_children(rt, elem, "xml", file);
+	error * e = render_element_children(elem, "xml", file);
 	if (e != NULL) {
 		return e;
 	}
@@ -41,24 +41,14 @@ error * bold_render_xml(runtime * rt, element * elem, FILE * file) {
 	return NULL;
 }
 
-void* ELEMENTS[] = {
-	(void*)"bold",
-	NULL
-};
+element_control_block * new_bold_ecb() {
+	element_control_block * ecb;
+	//We get
+	ecb = element_control_block_new("bold");
+	return ecb;
+}
 
-void* DESTRUCTORS[] = {
-	(void*)"bold",
-	NULL
-};
-
-void* COMMANDS[] = {
-	(void*)"bold", &bold_command,
-	NULL
-};
-
-void* RENDERERS[] = {
-	(void*)"bold",(void*)"html",&bold_render_html,
-	(void*)"bold",(void*)"latex",&bold_render_latex,
-	(void*)"bold",(void*)"xml",&bold_render_xml,
-	NULL
-};
+error * initialize(runtime * rt) {
+	runtime_register_command(rt, "bold", &bold_command);
+	runtime_register_element(rt, "bold", new_bold_ecb());
+}

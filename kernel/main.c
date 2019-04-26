@@ -52,6 +52,5 @@ int main(int argc, char ** arg) {
 		exit(-1);
 	}
 
-	//We dump the runtime tables
 	runtime_dump_tables(rt, stdout);
 }

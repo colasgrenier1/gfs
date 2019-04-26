@@ -56,6 +56,10 @@ element * document_stack_pop(document_stack * stack);
  *                                                                             *
  ******************************************************************************/
 
+/*
+ * Frame stack: contains name->command mappings.
+ */
+
 #define DOCUMENT_FRAME_DEFAULT_SIZE 50
 #define DOCUMENT_FRAME_INCREMENT 10
 
@@ -74,8 +78,18 @@ typedef struct document_frame {
 ///Creates a new frame
 document_frame * document_frame_new();
 
+///Free a frame
+void document_frame_free(document_frame * f);
+
 ///Add a command to a frame
 void document_frame_add(document_frame * frame, char * name, command * cmd);
+
+///Get a command from a frame
+command * document_frame_get(document_frame * frame, char * name);
+
+/*
+ * Frame stack: contains the stack of frames and the toplevel.
+ */
 
 typedef struct document_frame_stack_elem {
 	document_frame * frame;
@@ -83,7 +97,7 @@ typedef struct document_frame_stack_elem {
 } document_frame_stack_elem;
 
 typedef struct document_frame_stack {
-	document_frame * topevel;
+	document_frame * toplevel;
 	document_frame_stack_elem * top;
 } document_frame_stack;
 
@@ -113,10 +127,20 @@ command * document_frame_stack_resolve(document_frame_stack * stack, char * name
  * One master document object.
  */
 typedef struct document {
+	/**
+	 * Control flow stacks.
+	 */
 	///Stack of elements.
 	document_stack * stack;
 	///Stack of frames (variables).
 	document_frame_stack * frames;
+
+	/**
+	 * Builtin in element element control blocks.
+	 */
+	element_control_block * document_ecb;
+	element_control_block * paragraph_ecb;
+	element_control_block * text_ecb;
 } document;
 
 ///Allocates a document but does not do intiialization: use runtime_document_mew.
@@ -138,6 +162,6 @@ void document_enter(document * doc);
 void document_register(document * doc, command * cmd, char * name);
 
 ///Resolves a command or NULL.
-command *  document_resolve(document * doc, char * name);
+command * document_resolve(document * doc, char * name);
 
 #endif

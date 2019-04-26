@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "command.h"
 #include "runtime.h"
 #include "error.h"
 
@@ -14,6 +15,10 @@
  *                         R U N T I M E   T A B L E S                         *
  *                                                                             *
  ******************************************************************************/
+
+/*
+ * EXTENSION TABLE
+ */
 
  runtime_extension_table * runtime_extension_table_new() {
 	 runtime_extension_table * p = malloc(sizeof(runtime_extension_table));
@@ -32,10 +37,14 @@
 		 memcpy(tbl->tbl, old, sizeof(char *)*tmps);
 	 }
 	 //We copy
-	 tbl->size += 1;
 	 tbl->tbl[tbl->size] = name;
+	 tbl->size += 1;
 	 return NULL;
  }
+
+/*
+ * ELEMENT TABLE
+ */
 
 runtime_element_table * runtime_element_table_new() {
 	runtime_element_table * p = malloc(sizeof(runtime_element_table));
@@ -45,7 +54,7 @@ runtime_element_table * runtime_element_table_new() {
 	return p;
 }
 
-error * runtime_element_table_add(runtime_element_table * tbl, char * name, error * (*free) (element * elem)) {
+error * runtime_element_table_add(runtime_element_table * tbl, char * name, element_control_block * ecb) {
 	//If we do not have space we add space
 	if (tbl->size >= tbl->alloc) {
 		//We readjust
@@ -55,71 +64,21 @@ error * runtime_element_table_add(runtime_element_table * tbl, char * name, erro
 		memcpy(tbl->tbl, tmp, tmps*sizeof(runtime_element_table_elem));
 	}
 	tbl->tbl[tbl->size].name = name;
-	tbl->tbl[tbl->size].free = free;
+	tbl->tbl[tbl->size].ecb = ecb;
 	tbl->size += 1;
 	return NULL;
 }
 
-error * runtime_element_table_setfree(runtime_element_table * tbl, char * name, error * (*free) (element * elem)) {
+element_control_block * runtime_element_table_get(runtime_element_table * tbl, char * name) {
 	int i;
 	for (i=0; i<tbl->size; i++) {
 		if (strcmp(tbl->tbl[i].name, name)==0) {
-			tbl->tbl[i].free = free;
-			return NULL;
+			return tbl->tbl[i].ecb;
 		}
 	}
 	return NULL;
 }
 
-runtime_command_table * runtime_command_table_new() {
-	runtime_command_table * tbl = malloc(sizeof(runtime_command_table));
-	tbl->size = 0;
-	tbl->alloc = RUNTIME_COMMAND_TABLE_DEFAULT_SIZE;
-	tbl->tbl = malloc(sizeof(runtime_command_table_elem)*RUNTIME_COMMAND_TABLE_DEFAULT_SIZE);
-	return tbl;
-}
-
-error * runtime_command_table_add(runtime_command_table * tbl, char * name, error * (*execute)(document * doc, token_list * tokens)) {
-	//we add space if there is none
-	if (tbl->size >= tbl->alloc) {
-		runtime_command_table_elem * old = tbl->tbl;
-		tbl->tbl = malloc(sizeof(runtime_element_table_elem)*(tbl->alloc+RUNTIME_COMMAND_TABLE_INCREMENT));
-		memcpy(tbl->tbl,old,tbl->size*sizeof(runtime_element_table_elem));
-		free(old);
-	}
-	//We add te element
-	tbl->tbl[tbl->size].name = name;
-	tbl->tbl[tbl->size].execute = execute;
-	tbl->size += 1;
-	return NULL;
-}
-
-runtime_renderer_table * runtime_renderer_table_new() {
-	runtime_renderer_table * p = malloc(sizeof(runtime_renderer_table));
-	p->size = 0;
-	p->alloc = RUNTIME_RENDERER_TABLE_DEFAULT_SIZE;
-	p->tbl = malloc(sizeof(runtime_renderer_table_elem)*RUNTIME_RENDERER_TABLE_DEFAULT_SIZE);
-	return p;
-}
-
-error * runtime_renderer_table_add(runtime_renderer_table * tbl, char * elem, char * fmt, error * (*render)(element * elem, FILE * file)) {
-	//We add space if there is not enough
-	if (tbl->size >= tbl->alloc) {
-		runtime_renderer_table_elem * old = tbl->tbl;
-		tbl->tbl = malloc(sizeof(runtime_renderer_table_elem)*(tbl->alloc+RUNTIME_RENDERED_TABLE_INCREMENT));
-		memcpy(tbl->tbl,old,tbl->size*sizeof(runtime_renderer_table_elem));
-		free(old);
-	}
-	tbl->tbl[tbl->size].fmt = fmt;
-	tbl->tbl[tbl->size].elem = elem;
-	tbl->tbl[tbl->size].render = render;
-	tbl->size += 1;
-}
-
-//error * (*render) (element * elem, FILE * file) runtime_rendered_table_get(runtime_renderer_table * tbl, char * fmt, char * elem) {
-error* (*runtime_renderer_table_get(runtime * rt, char * fmt, char * elem))(element * elem, FILE * file) {
-
-}
 
 /*******************************************************************************
  *                                                                             *
@@ -136,8 +95,7 @@ error* (*runtime_renderer_table_get(runtime * rt, char * fmt, char * elem))(elem
 	 //Create the tables
 	 rt->extensions  = runtime_extension_table_new();
 	 rt->elements = runtime_element_table_new();
-	 rt->commands = runtime_command_table_new();
-	 rt->renderers = runtime_renderer_table_new();
+	 rt->commands = command_table_new();
  }
 
 void runtime_log(runtime * rt, char * fmt, ...) {
@@ -164,87 +122,24 @@ error * runtime_load(runtime * rt, char * file) {
 	//We first try to load from the library
 	void * ptr = dlopen(file, RTLD_NOW);
 	if (ptr==NULL) {
-		return error_new(1002, "COULD NOT LOAD PLUGIN \'%s\': %s", file, dlerror());
+		return error_new("COULD NOT LOAD PLUGIN \'%s\': %s", file, dlerror());
 	}
 
 	//We add the library to the runtime
 	runtime_extension_table_add(rt->extensions, file);
 
-	//We then initialize the library
-	//TODO
-
-	//We first get the element list.
-	//It is simply an array of strings.
-	tmp = dlsym(ptr, "ELEMENTS");
-	if (tmp == NULL) {
-		return error_new(1010, "NO ELEMENT TABLE IN PLUGIN '%s'", file);
-	}
-	char ** elist = (char **)tmp;
-	//We fill the table
-	idx = 0;
-	while (elist[idx] != NULL) {
-		runtime_element_table_add(rt->elements, elist[idx], NULL);
-		idx += 1;
-	}
-
-	//We then get the destructor list
-	//A list of string then pointer.
-	tmp = dlsym(ptr, "DESTRUCTORS");
-	if (tmp==NULL) {
-		return error_new(1011, "NO DESTRUCTOR TABLE IN PLUGIN '%s'", file);
-	}
-	void ** dlist = (void **)tmp;
-	//We fill the table
-	idx = 0;
-	while (dlist[idx] != NULL) {
-		if ((idx % 2) == 0) {
-			tmp1 = (char *)dlist[idx];
-		} else {
-			runtime_element_table_setfree(rt->elements, tmp1, (error* (*)(element * elem))dlist[idx]);
+	//We initialize the library
+	error* (*initialize)(runtime * rt);
+	initialize = (error* (*)(runtime * rt))dlsym(ptr, "initialize");
+	if (initialize != NULL) {
+		error * err = initialize(rt);
+		if (err != NULL) {
+			return err;
 		}
-		idx += 1;
+	} else {
+		return error_new("COULD NOT LOAD PLUGIN \'%s\' : %s", file, dlerror());
 	}
-
-	//We then get the command list.
-	//It is organised as a long list, with first a string
-	//then a pointer to the function.
-	tmp = dlsym(ptr, "COMMANDS");
-	if (tmp==NULL) {
-		return error_new(1012, "NO COMMAND TABLE IN PLUGIN '%s'", file);
-	}
-	void ** cmdlist = (void **)tmp;
-	//We fill the table
-	idx = 0;
-	while (cmdlist[idx] != NULL) {
-		if ((idx%2) == 0) {
-			tmp1 = (char *)cmdlist[idx];
-		} else {
-			runtime_command_table_add(rt->commands, tmp1, (error* (*)(document * doc, token_list * tok))cmdlist[idx]);
-		}
-		idx += 1;
-	}
-
-	//We then get the renderer list.
-	//The first is a string for element name
-	//then a string for the format type
-	//finally a pointer to the function
-	tmp = dlsym(ptr, "RENDERERS");
-	if (tmp==NULL) {
-		return error_new(1013, "NO RENDERER TABLE IN PLUGIN '%s'", file);
-	}
-	void ** rlist = (void **)tmp;
-	//We fill the table+
-	idx = 0;
-	while (rlist[idx] != NULL) {
-		if ((idx%3) == 0) {
-			tmp1 = (char *)rlist[idx];
-		} else if ((idx%3) == 1) {
-			tmp2 = (char *)rlist[idx];
-		} else {
-			runtime_renderer_table_add(rt->renderers, tmp1, tmp2, (error* (*)(element * elem, FILE * file))rlist[idx]);
-		}
-		idx += 1;
-	}
+	return NULL;
 }
 
 error * runtime_loaddir(runtime * rt, char * dir) {
@@ -272,29 +167,31 @@ error * runtime_loaddir(runtime * rt, char * dir) {
 			}
 		}
 	} else {
-		return error_new(12, "COULD NOT OPEN DIRECTORY '%s'", dir);
+		return error_new("COULD NOT OPEN DIRECTORY '%s'", dir);
 	}
 }
 
-void runtime_dump_tables(runtime * rt, FILE * f) {
-	int idx;
+/*******************************************************************************
+ *                                                                             *
+ *                  R U N T I M E   R E G I S T R A T I O N                    *
+ *                                                                             *
+ ******************************************************************************/
 
-	fprintf(f, "DUMPING RUNTIME TABLES FOR RUNTIME %p\n", (void*)rt);
+error * runtime_register_command(runtime * rt, char * name, command * cmd) {
+	return command_table_add(rt->commands, name, cmd);
+}
 
-	fprintf(f, "  DUMPING %d ELEMENT(S)\n", rt->elements->size);
-	for (idx=0; idx<rt->elements->size; idx++) {
-		fprintf(f, "    %-20s %p\n", rt->elements->tbl[idx].name, (void*)rt->elements->tbl[idx].free);
-	}
+error * runtime_register_element(runtime * rt, char * name, element_control_block * ecb) {
+	return runtime_element_table_add(rt->elements, name, ecb);
+}
 
-	fprintf(f, "  DUMPING %d COMMAND(S)\n", rt->commands->size);
-	for (idx=0; idx<rt->commands->size; idx++) {
-		fprintf(f, "    %-20s %p\n", rt->commands->tbl[idx].name, rt->commands->tbl[idx].execute);
-	}
+element_control_block * runtime_element_control_block_get(runtime * rt, char *name) {
+	return runtime_element_table_get(rt->elements, name);
+}
 
-	fprintf(f, "  DUMPING %d RENDERER(S)\n", rt->renderers->size);
-	for (idx=0; idx<rt->renderers->size; idx++) {
-		fprintf(f, "    %-10s %-20s %p\n", rt->renderers->tbl[idx].fmt, rt->renderers->tbl[idx].elem, rt->renderers->tbl[idx].render);
-	}
+error * runtime_register_renderer(runtime * rt, char * elem, char * cmd, renderer * r) {
+	//We first get the renderer
+
 }
 
 /*******************************************************************************
@@ -303,6 +200,34 @@ void runtime_dump_tables(runtime * rt, FILE * f) {
  *
  ******************************************************************************/
 
-error * render_element_children(runtime * rt, element * elem, char * fmt, FILE * file) {
+error * render_element_children(element * elem, char * fmt, FILE * file) {
 	return NULL;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ *                                 D E B U G                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+void * runtime_dump_tables(runtime * rt, FILE * file) {
+	int i;
+
+	//Say what we are dumping
+	fprintf(file, "DUMPING TABLES FOR RUNTIME %p\n", rt);
+
+	//Dump the commands
+	fprintf(file, "    DUMPING %d COMMAND(S)\n", rt->commands->size);
+	for (i=0; i<rt->commands->size; i++) {
+		fprintf(file, "        %-20s %p\n", rt->commands->tbl[i].name, rt->commands->tbl[i].cmd);
+	}
+
+	//Dump the elements
+	fprintf(file, "    DUMPING %d ELEMENT(S)\n", rt->elements->size);
+	for (i=0; i<rt->elements->size; i++) {
+		fprintf(file, "        %-20s %p\n", rt->elements->tbl[i].name, rt->elements->tbl[i].ecb);
+	}
+
+	//Signal we have eneded the dump
+	fprintf(file, "    DUMP FINISHED\n");
 }
