@@ -111,7 +111,7 @@ std::string raw(std::list<Token> list);
 class ElementControlBlock {
 public:
 	std::string name;
-	std::list<Renderer*> renderers;
+	std::map<std::string, Renderer*> renderers;
 	virtual void setOption(std::string & option, std::string & content) = 0;
 };
 
@@ -231,6 +231,7 @@ class Document {
 private:
 
 	class Frame {
+	public:
 		std::map<std::string, Command*> commands;
 		std::map<std::string, std::string> variables;
 	};
@@ -257,8 +258,8 @@ public:
 	 * Registration of element control blocks and renderers, and options.
 	 */
 	void registerElement(ElementControlBlock * ecb, std::string name);
-	void registerElementRenderer(std::string element, std::string format, Renderer r);
-	void setElementOption(std::string element, std::string option, std::string content);
+	void registerElementRenderer(std::string element, std::string format, Renderer * r);
+	void setElementOption(std::string & element, std::string & option, std::string & content);
 	void setRendererOption(std::string element, std::string format, std::string option, std::string content);
 
 	/**
@@ -295,7 +296,7 @@ public:
 	/**
 	 *
 	 */
-	void seekElement(Element elem);
+	void seekElement(Element * elem);
 	void seekElementType(std::string type);
 	void seekParagraph();
 	void seekParagraphContainer();

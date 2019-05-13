@@ -1,9 +1,5 @@
 #include "gfs.hpp"
 
-ElementControlBlock::setOption(std::string & option, std::string & content) {
-
-}
-
 Element::Element(std::string n, int l, int c, bool cp, bool tc, bool pc) {
 	name = n;
 	line = l;
@@ -13,12 +9,16 @@ Element::Element(std::string n, int l, int c, bool cp, bool tc, bool pc) {
 	paragraphContainer = pc;
 }
 
+Element::~Element() {
+
+}
+
 void Element::addChild(Element * child) {
 	children.push_back(child);
 }
 
 bool Element::hasChildren() {
-	return !children.empty()
+	return !children.empty();
 }
 
 void Element::removeChild(int n) {
@@ -26,7 +26,7 @@ void Element::removeChild(int n) {
 }
 
 int Element::countChildren() {
-
+	return children.size();
 }
 
 Element * Element::lastChild() {

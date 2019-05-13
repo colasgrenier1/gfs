@@ -15,7 +15,7 @@ void Document::registerElementRenderer(std::string element, std::string format, 
 	ecb->renderers[format] = r;
 }
 
-void Document::setElementOption(std::string element, std::string & option, std::string & content) {
+void Document::setElementOption(std::string & element, std::string & option, std::string & content) {
 	elements[element]->setOption(option, content);
 }
 
@@ -32,7 +32,7 @@ Element * Document::current() {
 }
 
 Element * Document::pop() {
-	return elementStack.pop_back();
+	elementStack.pop_back();
 }
 
 void Document::enter() {
@@ -45,14 +45,14 @@ void Document::leave() {
 
 void Document::setCommand(Command * cmd, std::string name) {
 	if (frameStack.back().commands.count(name) == 1) {
-		frameSstack.back().commands[name] = cmd
+		frameStack.back().commands[name] = cmd;
 	} else {
 		frameStack.back().commands[name] = cmd;
 	}
 }
 
-Command * getCommand(std::string name) {
-	for(std::list<Token>::reverse_iterator rit = frameStack.rbegin(); rit != frameStack.rend(); ++rit) {
+Command * Document::getCommand(std::string name) {
+	for(std::list<Frame>::reverse_iterator rit = frameStack.rbegin(); rit != frameStack.rend(); ++rit) {
 		if (rit->commands.count(name) > 0) {
 			return rit->commands[name];
 		}
@@ -68,7 +68,7 @@ std::string Document::getVariable(std::string name) {
 
 }
 
-void Document::seekElement(Element elem) {
+void Document::seekElement(Element * elem) {
 	while (elementStack.back() != elem) {
 		if (!elementStack.back()->canPop) {
 			throw Error("Cannot pop elemenent %s", elementStack.back()->name);
@@ -107,7 +107,7 @@ void Document::seekParagraphContainer() {
 		}
 	}
 	if (!elementStack.back()->paragraphContainer) {
-		throw Error("aawqfn")
+		throw Error("aawqfn");
 	}
 }
 
@@ -124,12 +124,18 @@ void Document::seekTextContainer() {
 		}
 	}
 	if (!elementStack.back()->textContainer) {
-		throw Error("aawqfn")
+		throw Error("aawqfn");
 	}
 }
 
-void Document::newParagraph() {
-
+void Document::newParagraph(int & line, int & col) {
+	//We must go to the nearest paragraphContainer
+	seekParagraphContainer();
+	//We create a paragraph
+	Paragraph * p = new Paragraph(line, col);
+	//We add it accordingly
+	addChild(p);
+	pop(p);
 }
 
 void Document::execute(std::list<Token> * tokens) {

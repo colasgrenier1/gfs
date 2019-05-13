@@ -1,65 +1,14 @@
 #include <string>
 
-#include "gfs.h"
-
-class Word {
-public:
-	std::string content;
-	Word() {
-
-	}
-	Word(std::string con) {
-		content = con;
-	}
-	Word(char c) {
-		content.append(&c, 1);
-	}
-}
-
-class Space {
-	bool breaking;
-	int length;
-}
-
-enum PunctuationType {
-	//Intra-"word"
-	APOSTROPHE,
-	HYPHEN,
-
-	//Inter-word
-	DASH,
-
-	//QUOTING
-	OPEN_QUOTE,
-	CLOSE_QUOTE,
-
-	//Punctuation per-se
-	PERIOD,
-	COMMA,
-	COLON,
-	SEMICOLON,
-	EXCLAMATION,
-	QUESTION
-};
-
-class Punctuation {
-
-};
-
-/**
- *
- */
-class TextElementControlBlock : public ElementControlBlock {
-
-};
+#include "gfs.hpp"
 
 /**
  * The text class
  */
 class Text : public Element {
-	std::list<>
+	std::string content;
 public:
-	Text(int line, int col): Element(line, col) {
+	Text(int line, int col): Element("text", line, col, true, false, false) {
 
 	}
 
